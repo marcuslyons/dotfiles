@@ -5,6 +5,25 @@ export PATH=$HOME/bin:/usr/local/bin:$PATH
 export ZSH="/home/mlyons/.oh-my-zsh"
 ZSH_THEME="nanotech"
 
+source .functions
+source .aliases
+
+# History size
+HISTSIZE=5000
+HISTFILESIZE=10000
+
+SAVEHIST=5000
+setopt EXTENDED_HISTORY
+HISTFILE=${ZDOTDIR:-$HOME}/.zsh_history
+# Share history across multiple zsh sessions
+setopt SHARE_HISTORY
+# Append to history
+setopt APPEND_HISTORY
+# Adds commands as they are typed, not at shell exit
+setopt INC_APPEND_HISTORY
+# Do not store duplications
+setopt HIST_IGNORE_DUPS
+
 # Plugins
 plugins=(git colored-man colorize github jira vagrant virtualenv pip python zsh-autosuggestions zsh-syntax-highlighting)
 source $ZSH/oh-my-zsh.sh
@@ -17,33 +36,6 @@ else
   export EDITOR='mvim'
 fi
 
-# aliases
-# Use vim for editing config files
-alias zshconfig="vim ~/.zshrc"
-alias svim="sudo vim"
-
-# Navigation
-alias ..="cd .."
-alias ...="cd ../.."
-
-# Utility
-alias remove="rm -rf "
-alias locip='ifconfig | grep inet'
-alias look='less -FX'
-
-# Git
-alias status="clear && git status"
-alias push="git push"
-alias pull="git pull"
-alias add="git add "
-alias all="git add --a"
-alias commit="git commit -m "
-alias checkout="git checkout"
-
-# WSL Quirks
-# Powershell
-alias power="powershell.exe"
-
 #Change ls colours
 LS_COLORS="ow=01;36;40" && export LS_COLORS
 
@@ -51,6 +43,3 @@ LS_COLORS="ow=01;36;40" && export LS_COLORS
 zstyle ':completion:*' list-colors "${(@s.:.)LS_COLORS}"
 autoload -Uz compinit
 compinit
-
-# functions
-function gi() { curl -L -s https://www.gitignore.io/api/$@ ;}
