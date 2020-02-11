@@ -11,6 +11,9 @@ plugins=(git colored-man-pages colorize github virtualenv pip python zsh-autosug
 source ~/.oh-my-zsh/oh-my-zsh.sh
 
 # GPG Agent
+# To fix the annoying gpg: signing failed: Inappropriate ioctl for device error
+# https://github.com/keybase/keybase-issues/issues/2798
+export GPG_TTY=$(tty)
 
 if test -f ~/.gpg-agent-info -a -n "$(pgrep gpg-agent)"; then
   source ~/.gpg-agent-info
