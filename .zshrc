@@ -6,23 +6,23 @@ export ZSH="/Users/mlyons/.oh-my-zsh"
 ZSH_THEME="nanotech"
 
 # Plugins
-# at some point add this back in zsh-syntax-highlighting 
+# at some point add this back in zsh-syntax-highlighting
 plugins=(git colored-man-pages colorize github virtualenv pip python zsh-autosuggestions you-should-use)
 source ~/.oh-my-zsh/oh-my-zsh.sh
 
 # GPG Agent
 # To fix the annoying gpg: signing failed: Inappropriate ioctl for device error
 # https://github.com/keybase/keybase-issues/issues/2798
-export GPG_TTY=$(tty)
+# export GPG_TTY=$(tty)
 
-if test -f ~/.gpg-agent-info -a -n "$(pgrep gpg-agent)"; then
-  source ~/.gpg-agent-info
-  export GPG_AGENT_INFO
-  export SSH_AUTH_SOCK
-  export SSH_AGENT_PID
-else
-  eval $(gpg-agent --daemon --write-env-file ~/.gpg-agent-info)
-fi
+# if test -f ~/.gpg-agent-info -a -n "$(pgrep gpg-agent)"; then
+#   source ~/.gpg-agent-info
+#   export GPG_AGENT_INFO
+#   export SSH_AUTH_SOCK
+#   export SSH_AGENT_PID
+# else
+#   eval $(gpg-agent --daemon --write-env-file ~/.gpg-agent-info)
+# fi
 
 # User configuration
 # Preferred editor for local and remote sessions
@@ -99,10 +99,6 @@ alias yat="yarn run test"
 alias yav="yarn run validate"
 alias yoff="yarn add --offline"
 alias ypm="echo \"Installing deps without lockfile and ignoring engines\" && yarn install --no-lockfile --ignore-engines"
-
-# WSL Quirks
-# Powershell
-alias power="powershell.exe"
 
 # functions
 gi() { curl -L -s https://www.gitignore.io/api/$@; }
