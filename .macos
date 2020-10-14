@@ -29,11 +29,11 @@ echo "installing homebrew"
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
 echo "brew installing stuff"
-# hub: a github-specific version of git
+# gh: the official github cli
 # ripgrep: rg is faster than alternatives
 # tree: really handy for listing out directories in text
 # bat: A cat(1) clone with syntax highlighting and Git integration.
-brew install git hub ripgrep watchman tree bat zsh
+brew install gh ripgrep watchman tree bat zsh
 
 # echo "installing node (via n-install)"
 # curl -L https://git.io/n-install | bash
@@ -61,8 +61,7 @@ echo "installing apps with brew cask"
 brew cask install alfred google-chrome firefox brave-browser bettertouchtool divvy \
 bartender google-drive-file-stream itsycal visual-studio-code 1password dash screenflow skype \
 discord obs handbrake zoomus avibrazil-rdm sip docker iterm2 \
-qlcolorcode qlmarkdown qlstephen quicklook-json webpquicklook \
-suspicious-package qlvideo spotify focus slack loopback stay dash
+suspicious-package spotify focus slack loopback stay
 
 # echo "Generating an RSA token for GitHub"
 # mkdir -p ~/.ssh
@@ -230,7 +229,7 @@ defaults -currentHost write NSGlobalDomain com.apple.trackpad.trackpadCornerClic
 defaults -currentHost write NSGlobalDomain com.apple.trackpad.enableSecondaryClick -bool true
 
 # Disable “natural” (Lion-style) scrolling
-# defaults write NSGlobalDomain com.apple.swipescrolldirection -bool false
+defaults write NSGlobalDomain com.apple.swipescrolldirection -bool false
 
 # Increase sound quality for Bluetooth headphones/headsets
 # defaults write com.apple.BluetoothAudioAgent "Apple Bitpool Min (editable)" -int 40
@@ -264,10 +263,10 @@ defaults write NSGlobalDomain InitialKeyRepeat -int 10
 sudo defaults write /Library/Preferences/com.apple.loginwindow showInputMenu -bool false
 
 # Set the timezone; see `sudo systemsetup -listtimezones` for other values
-# sudo systemsetup -settimezone "Europe/Brussels" > /dev/null
+sudo systemsetup -settimezone "America/Boise" > /dev/null
 
 # Stop iTunes from responding to the keyboard media keys
-launchctl unload -w /System/Library/LaunchAgents/com.apple.rcd.plist 2> /dev/null
+# launchctl unload -w /System/Library/LaunchAgents/com.apple.rcd.plist 2> /dev/null
 
 ###############################################################################
 # Screen                                                                      #
@@ -805,7 +804,7 @@ defaults write com.apple.SoftwareUpdate AutomaticDownload -int 1
 defaults write com.apple.SoftwareUpdate CriticalUpdateInstall -int 1
 
 # Automatically download apps purchased on other Macs
-defaults write com.apple.SoftwareUpdate ConfigDataInstall -int 1
+# defaults write com.apple.SoftwareUpdate ConfigDataInstall -int 1
 
 # Turn on app auto-update
 defaults write com.apple.commerce AutoUpdate -bool true

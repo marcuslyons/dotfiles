@@ -56,7 +56,3 @@ alias yat="yarn run test";
 alias yav="yarn run validate";
 alias yoff="yarn add --offline";
 alias ypm="echo \"Installing deps without lockfile and ignoring engines\" && yarn install --no-lockfile --ignore-engines"
-
-# WSL Quirks
-# Powershell
-alias power="powershell.exe"
