@@ -28,13 +28,6 @@ echo "installing homebrew"
 # install homebrew https://brew.sh
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 
-echo "brew installing stuff"
-# gh: the official github cli
-# ripgrep: rg is faster than alternatives
-# tree: really handy for listing out directories in text
-# bat: A cat(1) clone with syntax highlighting and Git integration.
-brew install gh ripgrep watchman tree bat zsh
-
 # echo "installing node (via n-install)"
 # curl -L https://git.io/n-install | bash
 
@@ -57,11 +50,6 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:
 echo "install you-should-use"
 git clone https://github.com/MichaelAquilina/zsh-you-should-use.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/you-should-use
 
-echo "installing apps with brew cask"
-brew cask install alfred google-chrome firefox brave-browser bettertouchtool divvy \
-bartender google-drive-file-stream itsycal visual-studio-code 1password dash screenflow skype \
-discord obs handbrake zoomus avibrazil-rdm sip docker iterm2 \
-suspicious-package spotify focus slack loopback stay
 
 # echo "Generating an RSA token for GitHub"
 # mkdir -p ~/.ssh
@@ -75,6 +63,9 @@ echo "Cloning dotfiles"
 git clone git@github.com:marcuslyons/dotfiles.git "${HOME}/dotfiles"
 ln -s "${HOME}/dotfiles/.zshrc" "${HOME}/.zshrc"
 ln -s "${HOME}/dotfiles/.gitignore_global" "${HOME}/.gitignore_global"
+
+echo "brew installing stuff"
+cd "${HOME}/dotfiles" && brew bundle
 
 echo "making system modifications:"
 
