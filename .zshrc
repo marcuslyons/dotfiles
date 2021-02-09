@@ -3,11 +3,10 @@ export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to oh-my-zsh installation.
 export ZSH="/Users/mlyons/.oh-my-zsh"
-ZSH_THEME="nanotech"
 
 # Plugins
 # at some point add this back in zsh-syntax-highlighting
-plugins=(git colored-man-pages colorize github virtualenv pip python zsh-autosuggestions you-should-use)
+plugins=(zsh-autosuggestions you-should-use)
 source ~/.oh-my-zsh/oh-my-zsh.sh
 
 # GPG Agent
@@ -29,7 +28,7 @@ source ~/.oh-my-zsh/oh-my-zsh.sh
 if [[ -n $SSH_CONNECTION ]]; then
   export EDITOR='vim'
 else
-  export EDITOR='mvim'
+  export EDITOR='vim'
 fi
 
 #Change ls colours
@@ -60,22 +59,33 @@ alias ...="cd ../../"
 alias ...l="cd ../../ && ll"
 alias de="cd ~/Desktop"
 alias d="cd ~/Dev"
+alias hw="cd ~/github/healthwise"
+alias ml="cd ~/github/marcuslyons"
 
 # Utility
 alias remove="rm -rf "
 alias locip='ifconfig | grep inet'
 alias look='less -FX'
 
+# Docker / Compose
+alias dcd='docker-compose down'
+alias dcu='docker-compose up'
+alias dcb='docker-compose up --build'
+
 # Git
 alias ga="git add ."
 alias gd="git diff"
 alias gf="git fetch"
 alias gp="git pull"
+alias gpr="gh pr create"
 alias gs="clear && git status"
 alias gpush="git push"
 alias add="git add "
 alias commit="git commit -m "
 alias checkout="git checkout"
+
+# remove all local branches except master
+alias gbr="git branch | grep -v "master" | xargs git branch -D"
 
 # npm aliases
 alias ni="npm install"
@@ -106,3 +116,12 @@ mg() { mkdir "$@" && cd "$@" || exit; }
 cdl() { cd "$@" && ll; }
 npm-latest() { npm info "$1" | grep latest; }
 killport() { lsof -i tcp:"$*" | awk 'NR!=1 {print $2}' | xargs kill -9; }
+
+# # NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+eval "$(starship init zsh)"

@@ -1,0 +1,113 @@
+{:default true
+
+ :alone 500
+ :sim 200
+ :simlayer-threshold 222
+
+ :modifiers {;
+             :super-hyper [:command :shift :control :option :fn]
+             :hyper [:command :shift :control :option]
+             :cos [:command :shift :option]
+             :cst [:command :shift :control]
+             :co [:command :option]
+             :cs [:command :shift]
+             :ct [:command :control]
+             :to [:control :option]
+             :ts [:control :shift]
+             :os [:option :shift]
+             ;
+             }
+
+ :simlayers {;
+             :movement-mode {:key :f}
+             :open-mode {:key :o}
+             :say-mode {:key :s}
+             :caps-mode {:key :caps_lock}
+             ;
+             }
+ :layers {;
+          ;
+          }
+
+ :templates {;
+             :code-project "osascript -e 'tell application \"Visual Studio Code\" to activate' &&
+                            open -a 'Visual Studio Code' %s -g %s"
+             ;
+             }
+ :applications {;
+                :chrome ["com.google.Chrome"]
+                :code ["com.microsoft.VSCode"]
+                :screenflow ["net.telestream.screenflow9"]
+                :slack ["com.tinyspeck.slackmacgap"]
+                :webstorm ["com.jetbrains.Webstorm"]
+                ;
+                }
+ :main [;
+        {:des "homerow movement"
+         :rules [:movement-mode
+                 [:##y :!Cleft_arrow]
+                 [:##o :!Cright_arrow]
+
+                 [:##h :left_arrow]
+                 [:##j :down_arrow]
+                 [:##k :up_arrow]
+                 [:##l :right_arrow]
+
+                 ;[:semicolon :autocomplete]
+
+                 ;[:return_or_enter :insert_line_below]
+
+                 ;[:left_shift :expand_selection]
+                 ;
+                 ]
+         ;
+         }
+        {:des "open files"
+         :rules [:open-mode
+                 [:k [:code-project "~/dotfiles/karabiner.edn"]]
+                 [:d [:code-project "~/dotfiles"]]
+                 [:r [:code-project "~/dotfiles/.zshrc" ]]
+                 [:b [:code-project "~/GitHub/marcuslyons/marcuslyons.com" ]]
+                 [:f [:code-project "~/GitHub/marcuslyons/second-brain" ]]
+                 [:h [:code-project "~/GitHub/healthwise/platform-provisioning-tool-ui" ]]
+                 ;
+                 ]
+         ;
+         }
+        {:des "caps-mode"
+         :rules [:caps-mode
+                  [:caps_lock :escape]
+                 ; I don't use caps_lock
+                 ;
+                 ]
+         ;
+         }
+         {:des "say things"
+         :rules [:say-mode
+                ;
+         ]}
+        ;
+        ]
+ ;
+ }
+
+
+
+;; rule [:period ["media-mode" 1] nil {:afterup ["media-mode" 0] :alone :period}]
+;;       |_____| |_______________| |_| |_________________________________________|
+;;        <from>    <to>      <conditions>         <other options>
+
+    ;; !  | means mandatory
+    ;; #  | means optional
+    ;; C  | left_command
+    ;; T  | left_control
+    ;; O  | left_option
+    ;; S  | left_shift
+    ;; F  | fn
+    ;; Q  | right_command
+    ;; W  | right_control
+    ;; E  | right_option
+    ;; R  | right_shift
+    ;;
+    ;; !! | mandatory command + control + optional + shift (hyper)
+    ;; ## | optional any
