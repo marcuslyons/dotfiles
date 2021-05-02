@@ -23,6 +23,8 @@
              :open-mode {:key :o}
              :say-mode {:key :s}
              :caps-mode {:key :caps_lock}
+             :insert-mode {:key :i}
+             :tab-mode {:key :tab}
              ;
              }
  :layers {;
@@ -32,6 +34,8 @@
  :templates {;
              :code-project "osascript -e 'tell application \"Visual Studio Code\" to activate' &&
                             open -a 'Visual Studio Code' %s -g %s"
+             ;
+             :type "osascript -e 'tell application \"System Events\" to keystroke \"%s\"'"
              ;
              }
  :applications {;
@@ -66,17 +70,23 @@
          :rules [:open-mode
                  [:k [:code-project "~/dotfiles/karabiner.edn"]]
                  [:d [:code-project "~/dotfiles"]]
-                 [:r [:code-project "~/dotfiles/.zshrc" ]]
+                 [:z [:code-project "~/dotfiles/.zshrc" ]]
                  [:b [:code-project "~/GitHub/marcuslyons/marcuslyons.com" ]]
-                 [:f [:code-project "~/GitHub/marcuslyons/second-brain" ]]
+                 [:g [:code-project "~/GitHub/marcuslyons/grimoire" ]]
                  [:h [:code-project "~/GitHub/healthwise/platform-provisioning-tool-ui" ]]
                  ;
                  ]
          ;
          }
+        {:des "open tabs"
+         :rules [:tab-mode
+                 [:t []]
+
+                ]
+        }
         {:des "caps-mode"
          :rules [:caps-mode
-                  [:caps_lock :escape]
+                  [:caps_lock [:escape :!ST1]]
                  ; I don't use caps_lock
                  ;
                  ]
@@ -84,7 +94,12 @@
          }
          {:des "say things"
          :rules [:say-mode
-                ;
+                [:d [:fn :fn]];
+         ]}
+        ;
+         {:des "insert things / snippets"
+         :rules [:insert-mode
+                [:r [:type "import * as React from '\"react\"'"]];
          ]}
         ;
         ]

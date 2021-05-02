@@ -66,6 +66,7 @@ alias ml="cd ~/github/marcuslyons"
 alias remove="rm -rf "
 alias locip='ifconfig | grep inet'
 alias look='less -FX'
+alias bu="brew update && brew upgrade && brew cleanup"
 
 # Docker / Compose
 alias dcd='docker-compose down'
@@ -83,6 +84,9 @@ alias gpush="git push"
 alias add="git add "
 alias commit="git commit -m "
 alias checkout="git checkout"
+alias gc="git checkout"
+alias gcb="git checkout -b"
+alias gcm="git checkout master"
 
 # remove all local branches except master
 alias gbr="git branch | grep -v "master" | xargs git branch -D"
@@ -125,3 +129,4 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 
 eval "$(starship init zsh)"
+export PATH="/usr/local/sbin:$PATH"
