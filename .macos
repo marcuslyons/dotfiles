@@ -19,8 +19,8 @@ while true; do sudo -n true; sleep 60; kill -0 "$$" || exit; done 2>/dev/null &
 
 echo "Hello $(whoami), let's get set up."
 
-echo "mkdir -p ${HOME}/Dev"
-mkdir -p "${HOME}/Dev"
+echo "mkdir -p ${HOME}/github"
+mkdir -p "${HOME}/github"
 
 echo "mkdir -p ${HOME}/Screenshots"
 

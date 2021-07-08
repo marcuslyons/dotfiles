@@ -130,3 +130,4 @@ export NVM_DIR="$HOME/.nvm"
 
 eval "$(starship init zsh)"
 export PATH="/usr/local/sbin:$PATH"
+export PATH=/opt/homebrew/bin:/usr/local/sbin:/Users/marcuslyons/bin:/usr/local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
