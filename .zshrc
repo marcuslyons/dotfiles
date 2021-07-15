@@ -59,8 +59,8 @@ alias ...="cd ../../"
 alias ...l="cd ../../ && ll"
 alias de="cd ~/Desktop"
 alias d="cd ~/Dev"
-alias hw="cd ~/github/healthwise"
 alias ml="cd ~/github/marcuslyons"
+alias in="cd ~/github/insider"
 
 # Utility
 alias remove="rm -rf "
