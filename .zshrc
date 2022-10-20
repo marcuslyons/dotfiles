@@ -2,12 +2,12 @@
 export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to oh-my-zsh installation.
-export ZSH="/Users/mlyons/.oh-my-zsh"
+# export ZSH="/Users/mlyons/.oh-my-zsh"
 
-# Plugins
-# at some point add this back in zsh-syntax-highlighting
-plugins=(zsh-autosuggestions you-should-use)
-source ~/.oh-my-zsh/oh-my-zsh.sh
+# # Plugins
+# # at some point add this back in zsh-syntax-highlighting
+# plugins=(zsh-autosuggestions you-should-use)
+# source ~/.oh-my-zsh/oh-my-zsh.sh
 
 # GPG Agent
 # To fix the annoying gpg: signing failed: Inappropriate ioctl for device error
@@ -128,8 +128,3 @@ export PATH="$VOLTA_HOME/bin:$PATH"
 eval "$(starship init zsh)"
 export PATH="/usr/local/sbin:$PATH"
 export PATH=/opt/homebrew/bin:/usr/local/sbin:/Users/marcuslyons/bin:/usr/local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
-
-# zoxide
-eval "$(zoxide init zsh)"
-
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
