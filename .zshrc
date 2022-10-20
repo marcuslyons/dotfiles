@@ -121,14 +121,15 @@ cdl() { cd "$@" && ll; }
 npm-latest() { npm info "$1" | grep latest; }
 killport() { lsof -i tcp:"$*" | awk 'NR!=1 {print $2}' | xargs kill -9; }
 
-# # NVM
-export NVM_DIR=~/.nvm
-source $(brew --prefix nvm)/nvm.sh
-
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
-
-[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+## Volta and Starship
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"
 
 eval "$(starship init zsh)"
 export PATH="/usr/local/sbin:$PATH"
 export PATH=/opt/homebrew/bin:/usr/local/sbin:/Users/marcuslyons/bin:/usr/local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+# zoxide
+eval "$(zoxide init zsh)"
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
