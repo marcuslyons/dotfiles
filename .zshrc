@@ -86,10 +86,14 @@ alias commit="git commit -m "
 alias checkout="git checkout"
 alias gc="git checkout"
 alias gcb="git checkout -b"
-alias gcm="git checkout master"
+alias gcm="git checkout main"
+alias gcma="git checkout master"
+
+# remove all local branches except main
+alias gbr="git branch | grep -v "main" | xargs git branch -D"
 
 # remove all local branches except master
-alias gbr="git branch | grep -v "master" | xargs git branch -D"
+alias gbrm="git branch | grep -v "master" | xargs git branch -D"
 
 # npm aliases
 alias ni="npm install"
@@ -104,6 +108,16 @@ alias rmn="rm -rf node_modules"
 alias flush-npm="rm -rf node_modules && npm i && say NPM is done"
 alias nicache="npm install --prefer-offline"
 alias nioff="npm install --offline"
+
+# pnpm aliases
+alias pni="npm install"
+alias pnci="npm ci"
+alias pnrs="npm run start -s --"
+alias pnrb="npm run build -s --"
+alias pnrd="npm run dev -s --"
+alias pnrt="npm run test -s --"
+alias pnrtw="npm run test:watch -s --"
+alias pnrv="npm run validate -s --"
 
 ## yarn aliases
 alias yar="yarn run"
