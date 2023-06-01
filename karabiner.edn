@@ -71,9 +71,7 @@
                  [:k [:code-project "~/dotfiles/karabiner.edn"]]
                  [:d [:code-project "~/dotfiles"]]
                  [:z [:code-project "~/dotfiles/.zshrc" ]]
-                 [:b [:code-project "~/GitHub/marcuslyons/marcuslyons.com" ]]
-                 [:g [:code-project "~/GitHub/marcuslyons/grimoire" ]]
-                 [:h [:code-project "~/GitHub/healthwise/platform-provisioning-tool-ui" ]]
+                 [:b [:code-project "~/gitHub/marcuslyons/marcuslyons.com" ]]
                  ;
                  ]
          ;
@@ -95,11 +93,6 @@
          {:des "say things"
          :rules [:say-mode
                 [:d [:fn :fn]];
-         ]}
-        ;
-         {:des "insert things / snippets"
-         :rules [:insert-mode
-                [:r [:type "import * as React from '\"react\"'"]];
          ]}
         ;
         ]

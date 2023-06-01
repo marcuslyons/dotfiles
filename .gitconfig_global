@@ -1,0 +1,5 @@
+[user]
+  name = Marcus Lyons
+
+[push]
+	autoSetupRemote = true
