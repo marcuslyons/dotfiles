@@ -43,7 +43,7 @@ configure_directories() {
 }
 
 configure_macos() {
-  bash ./macos
+  bash ./.macos
 }
 
 configure_zsh() {
@@ -69,7 +69,7 @@ if [ "$system_type" = "Darwin" ]; then
   configure_macos
 fi
 
-configure_dotfiles
-configure_directories
-configure_zsh
 install_brew
+configure_zsh
+configure_directories
+configure_dotfiles
