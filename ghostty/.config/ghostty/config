@@ -1,0 +1,7 @@
+# ghostty config
+# works cross-platform: resolves zsh via $PATH instead of absolute path
+command = zsh
+
+font-family = JetBrainsMono Nerd Font
+font-size = 14
+theme = Catppuccin Mocha
