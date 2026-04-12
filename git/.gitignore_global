@@ -1,5 +1,6 @@
 # Mac
 .DS_Store
+**/.DS_Store
 
 # WebStorm
 .idea/
@@ -24,11 +25,14 @@ Session.vim
 # localhistory
 .history
 
-# Healthwise specific stuff
-.nvmrc
-
 # git
 *.patch
 
 # eslint
 .eslintcache
+
+# ai 
+.claude/
+.codex/
+AGENTS.md
+CLAUDE.md

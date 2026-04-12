@@ -1,1 +1,8 @@
 .DS_STORE
+**/.DS_Store
+.vscode
+.claude/
+.codex/
+CLAUDE.md
+AGENTS.md
+
