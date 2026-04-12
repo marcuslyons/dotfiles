@@ -1,0 +1,8 @@
+[user]
+	name = Marcus Lyons
+	email = marcus.a.lyons@gmail.com
+[push]
+	autoSetupRemote = true
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/
+
