@@ -91,3 +91,18 @@ install_volta
 install_zsh_omarchy
 install_lazyvim
 create_directories
+
+if [ "$OS" = "Darwin" ]; then
+  stow_packages "${MACOS_PACKAGES[@]}"
+  link_ghostty_macos
+
+  # Install from Brewfile if present
+  if [ -f "$HOME/Brewfile" ]; then
+    echo "Installing from Brewfile..."
+    brew bundle --file="$HOME/Brewfile"
+  fi
+else
+  stow_packages "${OMARCHY_PACKAGES[@]}"
+fi
+
+echo "Done. Restart your shell or run: exec zsh"
