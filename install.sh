@@ -7,11 +7,14 @@ cd "$DOTFILES_DIR"
 OS="$(uname -s)"
 
 # Common Packages
-COMMON_PACKAGES=(zsh shell git starship ghostty nvim agents)
+# COMMON_PACKAGES=(zsh shell git starship ghostty nvim agents)
+COMMON_PACKAGES=(git starship ghostty nvim)
 
 # OS specific packages
 MACOS_PACKAGES=(karabiner brew)
 OMARCHY_PACKAGES=(hypr)
+
+VOLTA_PACKAGES=(node@24 safe-chain antigravity-usage pnpm@lts bun@lts @mariozechner/pi-coding-agent)
 
 stow_packages() {
   for pkg in "$@"; do
@@ -36,7 +39,11 @@ install_volta() {
   curl https://get.volta.sh | bash
   export VOLTA_HOME="$HOME/.volta"
   export PATH="$VOLTA_HOME/bin:$PATH"
-  volta install node@24
+
+  for pkg in "$@"; do
+    echo "Installing $pkg..."
+    volta install "$pkg"
+  done
 }
 
 install_lazyvim() {
@@ -87,10 +94,12 @@ link_ghostty_macos() {
 # --- Main ---
 install_homebrew
 install_stow
-install_volta
+install_volta "${VOLTA_PACKAGES[@]}"
 install_zsh_omarchy
 install_lazyvim
 create_directories
+
+stow_packages "${COMMON_PACKAGES[@]}"
 
 if [ "$OS" = "Darwin" ]; then
   stow_packages "${MACOS_PACKAGES[@]}"
