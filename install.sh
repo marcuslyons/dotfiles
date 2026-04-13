@@ -14,7 +14,7 @@ COMMON_PACKAGES=(git starship ghostty nvim)
 MACOS_PACKAGES=(karabiner brew)
 OMARCHY_PACKAGES=(hypr)
 
-VOLTA_PACKAGES=(node@24 safe-chain antigravity-usage pnpm@lts bun@lts @mariozechner/pi-coding-agent)
+VOLTA_PACKAGES=(node@24 safe-chain antigravity-usage pnpm bun @mariozechner/pi-coding-agent)
 
 stow_packages() {
   for pkg in "$@"; do
@@ -39,7 +39,9 @@ install_volta() {
   curl https://get.volta.sh | bash
   export VOLTA_HOME="$HOME/.volta"
   export PATH="$VOLTA_HOME/bin:$PATH"
+}
 
+install_volta_packages() {
   for pkg in "$@"; do
     echo "Installing $pkg..."
     volta install "$pkg"
@@ -94,7 +96,8 @@ link_ghostty_macos() {
 # --- Main ---
 install_homebrew
 install_stow
-install_volta "${VOLTA_PACKAGES[@]}"
+install_volta
+install_volta_packages "${VOLTA_PACKAGES[@]}"
 install_zsh_omarchy
 install_lazyvim
 create_directories
