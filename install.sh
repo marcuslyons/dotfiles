@@ -11,7 +11,7 @@ OS="$(uname -s)"
 COMMON_PACKAGES=(git starship ghostty nvim)
 
 # OS specific packages
-MACOS_PACKAGES=(karabiner brew)
+MACOS_PACKAGES=(karabiner brew yabai skhd)
 OMARCHY_PACKAGES=(hypr)
 
 VOLTA_PACKAGES=(node@24 safe-chain antigravity-usage pnpm bun @mariozechner/pi-coding-agent)

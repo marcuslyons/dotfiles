@@ -1,0 +1,36 @@
+# change window focus within space
+alt - j : yabai -m window --focus south
+alt - k : yabai -m window --focus north
+alt - h : yabai -m window --focus west
+alt - l : yabai -m window --focus east
+
+# focus display
+ctrl - j : yabai -m display --focus south
+ctrl - k : yabai -m display --focus north
+ctrl - h : yabai -m display --focus west
+ctrl - l : yabai -m display --focus east
+
+# swap windows
+shift + alt - j : yabai -m window --swap south
+shift + alt - k : yabai -m window --swap north
+shift + alt - h : yabai -m window --swap west
+shift + alt - l : yabai -m window --swap east
+
+# move window to display
+ctrl + alt - j : yabai -m window --display south; yabai -m display --focus south
+ctrl + alt - k : yabai -m window --display north; yabai -m display --focus north
+ctrl + alt - h : yabai -m window --display west; yabai -m display --focus west
+ctrl + alt - l : yabai -m window --display east; yabai -m display --focus east
+
+# layout settings
+shift + alt - r : yabai -m space --rotate 270
+shift + alt - y : yabai -m space --mirror y-axis
+shift + alt - x : yabai -m space --mirror x-axis
+shift + alt - t : yabai -m window --toggle float --grid 4:4:1:1:2:2
+shift + alt - m : yabai -m window --toggle zoom-fullscreen
+shift + alt - e : yabai -m space --balance
+
+# stop/start/restart yabai
+ctrl + alt - q : yabai --stop-service
+ctrl + alt - s : yabai --start-service
+ctrl + alt - r : yabai --restart-service
