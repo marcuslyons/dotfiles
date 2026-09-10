@@ -27,6 +27,7 @@ stow -d ~/github/marcuslyons/dotfiles -t ~ <package>
 | `nvim` | both | LazyVim override files (plugins, keymaps, options) |
 | `brew` | macOS | Brewfile for `brew bundle` |
 | `karabiner` | macOS | Karabiner Elements (Goku) config |
+| `offload` | both | `offload`, copies personal data off a work machine and audits it for employer code |
 
 ### Not yet migrated
 

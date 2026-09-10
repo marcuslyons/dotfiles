@@ -1,0 +1,359 @@
+#!/usr/bin/env bash
+#
+# offload - copy personal data off a work machine, without taking their code.
+#
+# Written on a layoff day. The first pass that day rsynced ~/Downloads whole
+# and quietly put a full snapshot of the employer's source repo onto personal
+# storage. That is the mistake this script exists to prevent: the exclusion
+# list is not a convenience, it is the point.
+#
+# Two rules:
+#   1. Never copy the employer's source, credentials, or session data.
+#   2. Verify, do not assume. A copy that was never read back is a guess.
+#
+# Usage:
+#   offload --dest /Volumes/nas/offload-$(date +%F)
+#   offload --dest <dir> --dry-run
+#   offload --dest <dir> --audit-only
+#
+set -uo pipefail
+
+VERSION="1.0.0"
+DEST=""
+DRY_RUN=0
+AUDIT_ONLY=0
+SKIP_VERIFY=0
+INCLUDE_BULK=1
+
+# ---------------------------------------------------------------------------
+# Exclusion list. Edit WORK_TERMS for your employer before first use.
+# ---------------------------------------------------------------------------
+
+# Repo names, service names, and internal domains. Any file whose NAME matches
+# is never copied, and any file whose CONTENT matches is reported by the audit.
+WORK_TERMS_DEFAULT="fenrir bifrost forseti heimdall skadi frigga sigyn gefjon idun capi businessinsider insider-docs"
+
+# Files that must never leave the machine, regardless of where they live.
+CRED_PATTERNS=(
+  '.aws' '.kube' '.okta_aws_login_config' '.terraform.d' '.docker/config.json'
+  'auth.json' 'credentials' 'id_rsa' 'id_dsa' '.netrc' '.pgpass'
+  'models-store.json' 'token.json' 'service-account*.json'
+)
+
+# Directories that are pure cache or rebuildable. Skipped to save hours.
+JUNK_PATTERNS=(
+  'node_modules' '.venv' '__pycache__' '.gradle' '.m2' '.cargo/registry'
+  'Library/Caches' '.cache' '.npm/_cacache' 'DerivedData' '.Trash'
+  '*.dmg' '*.pkg' '*.iso'
+)
+
+# Apple services already sync these. Copying them wastes the transfer window.
+APPLE_SYNCED=(
+  'Library/Messages' 'Library/Mobile Documents' 'Pictures/Photos Library.photoslibrary'
+  'Library/Safari' 'Library/Group Containers/group.com.apple.notes'
+)
+
+usage() {
+  cat <<EOF
+offload $VERSION - copy personal data off a work machine
+
+Usage:
+  offload --dest <dir> [options]
+
+Options:
+  --dest <dir>       where to copy. Required.
+  --work-terms "a b" employer repo and service names. Default:
+                     "$WORK_TERMS_DEFAULT"
+  --dry-run          show what would happen, copy nothing
+  --audit-only       skip copying, just audit <dir> for work content
+  --no-bulk          config and dotfiles only, skip Downloads and Documents
+  --skip-verify      do not read the copy back. Not recommended.
+  -h, --help         this text
+
+What it does, in order:
+  1. Refuses to run if --dest is inside \$HOME on the work machine.
+  2. Copies personal directories, skipping caches and Apple-synced data.
+  3. Deletes anything matching the work exclusion list from the copy.
+  4. Audits the copy for work names in file names AND file contents.
+  5. Scans for live credentials.
+  6. Reads the copy back and diffs it against the source.
+  7. Writes MANIFEST.md and AUDIT.txt into the destination.
+
+The audit is the part that matters. Copying is easy; not copying their source
+is the hard part, and step 3 only removes what step 4 can still find.
+EOF
+}
+
+log()  { printf '%s\n' "$*"; }
+step() { printf '\n== %s\n' "$*"; }
+warn() { printf 'WARN: %s\n' "$*" >&2; }
+die()  { printf 'ERROR: %s\n' "$*" >&2; exit 1; }
+
+WORK_TERMS="$WORK_TERMS_DEFAULT"
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --dest) DEST="${2:-}"; shift 2 ;;
+    --work-terms) WORK_TERMS="${2:-}"; shift 2 ;;
+    --dry-run) DRY_RUN=1; shift ;;
+    --audit-only) AUDIT_ONLY=1; shift ;;
+    --no-bulk) INCLUDE_BULK=0; shift ;;
+    --skip-verify) SKIP_VERIFY=1; shift ;;
+    -h|--help) usage; exit 0 ;;
+    *) die "Unknown option: $1. See --help." ;;
+  esac
+done
+
+[ -n "$DEST" ] || { usage; exit 2; }
+
+# A destination inside $HOME is still on the machine being wiped.
+case "$DEST" in
+  "$HOME"/Library/Mobile\ Documents/*) : ;;  # iCloud is off-machine, allow
+  "$HOME"/*) die "--dest is inside \$HOME. That disk is the one you are losing." ;;
+esac
+
+mkdir -p "$DEST" || die "Cannot write to $DEST"
+AUDIT="$DEST/AUDIT.txt"
+
+RSYNC_FLAGS=(-a --no-perms --no-owner --no-group)
+[ "$DRY_RUN" = 1 ] && RSYNC_FLAGS+=(-n)
+
+build_excludes() {
+  EXCLUDES=()
+  for p in "${JUNK_PATTERNS[@]}" "${CRED_PATTERNS[@]}" "${APPLE_SYNCED[@]}"; do
+    EXCLUDES+=(--exclude "$p")
+  done
+  for t in $WORK_TERMS; do
+    # Case-insensitive on the name only. Content is handled by the audit.
+    EXCLUDES+=(--exclude "*${t}*" --exclude "*${t^}*" --exclude "*${t^^}*")
+  done
+  EXCLUDES+=(--exclude '.DS_Store')
+}
+
+copy_one() {
+  src="$1"
+  [ -e "$src" ] || return 0
+  sz=$(du -sh "$src" 2>/dev/null | cut -f1)
+  log "  $(basename "$src") ($sz)"
+  rsync "${RSYNC_FLAGS[@]}" "${EXCLUDES[@]}" "$src" "$DEST/" 2>/dev/null \
+    | grep -v 'vanished' | tail -1
+}
+
+do_copy() {
+  step "Copying to $DEST"
+  build_excludes
+
+  # Small and high value first, so an interrupted run still saves the good bits.
+  for d in "$HOME/Documents" "$HOME/Desktop" "$HOME/Movies" "$HOME/Music"; do
+    copy_one "$d"
+  done
+
+  log "  dotfiles and config"
+  mkdir -p "$DEST/home-personal"
+  for f in .zshrc .zprofile .zshenv .profile .bashrc .aliases .functions .macos \
+           .gitconfig_global .gitignore_global .npmrc .config .local/bin \
+           .zsh_history .bash_history .aerospace.toml .yabairc .skhdrc karabiner.edn; do
+    [ -e "$HOME/$f" ] || continue
+    rsync "${RSYNC_FLAGS[@]}" "${EXCLUDES[@]}" "$HOME/$f" "$DEST/home-personal/" 2>/dev/null
+  done
+
+  if [ "$INCLUDE_BULK" = 1 ]; then
+    copy_one "$HOME/Downloads"
+  else
+    log "  (skipping Downloads, --no-bulk)"
+  fi
+}
+
+# ---------------------------------------------------------------------------
+# The audit. This is the reason the script exists.
+# ---------------------------------------------------------------------------
+
+do_audit() {
+  step "Auditing $DEST for work content"
+  : > "$AUDIT"
+  {
+    echo "offload audit $(date '+%Y-%m-%d %H:%M:%S')"
+    echo "destination: $DEST"
+    echo "work terms:  $WORK_TERMS"
+    echo
+  } >> "$AUDIT"
+
+  local found=0
+
+  echo "--- file names matching work terms ---" >> "$AUDIT"
+  for t in $WORK_TERMS; do
+    while IFS= read -r f; do
+      echo "  $t: ${f#"$DEST"/}" >> "$AUDIT"
+      found=$((found + 1))
+    done < <(find "$DEST" -iname "*${t}*" 2>/dev/null)
+  done
+  [ "$found" = 0 ] && echo "  none" >> "$AUDIT"
+
+  # Names are the easy half. Content is where a source snapshot actually hides:
+  # an archive, an agent transcript, a diff pasted into a note.
+  echo >> "$AUDIT"
+  echo "--- file contents mentioning work terms ---" >> "$AUDIT"
+  local pattern
+  pattern=$(echo "$WORK_TERMS" | tr ' ' '|')
+  local hits=0
+  while IFS= read -r f; do
+    # The audit and manifest name the work terms by design. Skip them, or the
+    # report always flags itself and buries the real findings.
+    case "$f" in "$AUDIT"|"$DEST/MANIFEST.md") continue ;; esac
+    echo "  ${f#"$DEST"/}" >> "$AUDIT"
+    hits=$((hits + 1))
+  done < <(LC_ALL=C grep -rlEi "$pattern" "$DEST" 2>/dev/null | head -200)
+  [ "$hits" = 0 ] && echo "  none" >> "$AUDIT"
+
+  echo >> "$AUDIT"
+  echo "--- archives worth opening by hand ---" >> "$AUDIT"
+  local arc=0
+  while IFS= read -r f; do
+    echo "  ${f#"$DEST"/}" >> "$AUDIT"
+    arc=$((arc + 1))
+  done < <(find "$DEST" \( -iname '*.zip' -o -iname '*.tar.gz' -o -iname '*.tgz' \) -size +1M 2>/dev/null)
+  [ "$arc" = 0 ] && echo "  none" >> "$AUDIT"
+
+  echo >> "$AUDIT"
+  echo "--- live credentials ---" >> "$AUDIT"
+  local sec=0
+  while IFS= read -r f; do
+    case "$f" in "$AUDIT") continue ;; esac
+    echo "  ${f#"$DEST"/}" >> "$AUDIT"
+    sec=$((sec + 1))
+  done < <(LC_ALL=C grep -rlE \
+      '(AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{30,}|sk-[A-Za-z0-9]{30,}|ATATT[A-Za-z0-9]{30,}|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY)' \
+      "$DEST" 2>/dev/null | head -50)
+  [ "$sec" = 0 ] && echo "  none" >> "$AUDIT"
+
+  log "  names:       $found"
+  log "  contents:    $hits"
+  log "  archives:    $arc"
+  log "  credentials: $sec"
+  log "  written to   $AUDIT"
+
+  if [ $((found + hits + sec)) -gt 0 ]; then
+    warn "Review $AUDIT before you disconnect. Content hits are usually agent"
+    warn "transcripts or archives. Names are usually harmless. Credentials are not."
+    return 1
+  fi
+  log "  clean"
+  return 0
+}
+
+do_verify() {
+  step "Verifying the copy"
+  local bad=0
+  for d in Documents Desktop Downloads Movies Music; do
+    [ -e "$HOME/$d" ] || continue
+    n=$(rsync -an "${EXCLUDES[@]}" "$HOME/$d" "$DEST/" 2>/dev/null \
+        | grep -vE '^(sending|total|$|\./)' | wc -l | tr -d ' ')
+
+    # rsync only reports what the destination is MISSING. If the source is
+    # emptied after the copy, that check passes while telling you nothing.
+    # This happened for real: a Documents folder was tidied into the Trash
+    # minutes after being copied, and verification reported success against
+    # an almost empty source. Count both sides.
+    src_n=$(find "$HOME/$d" -type f 2>/dev/null | wc -l | tr -d ' ')
+    dst_n=$(find "$DEST/$d" -type f 2>/dev/null | wc -l | tr -d ' ')
+
+    printf '  %-12s %s differing, source %s files, copy %s files\n' "$d" "$n" "$src_n" "$dst_n"
+
+    if [ "$n" != 0 ]; then
+      bad=1
+    elif [ "$src_n" -lt "$dst_n" ]; then
+      warn "$d: the source now has fewer files than the copy."
+      warn "  The copy is ahead, which is safe, but something changed the source"
+      warn "  after it ran. Check ~/.Trash and iCloud before you assume a fault."
+    elif [ "$src_n" -eq 0 ] && [ "$dst_n" -eq 0 ]; then
+      warn "$d: both sides are empty. Verification here proves nothing."
+    fi
+  done
+
+  # An archive that never gets opened is an assumption, not a backup.
+  log "  testing archives"
+  local afail=0
+  while IFS= read -r z; do
+    unzip -tqq "$z" >/dev/null 2>&1 || { warn "archive failed: ${z#"$DEST"/}"; afail=$((afail + 1)); }
+  done < <(find "$DEST" -iname '*.zip' -size +1M 2>/dev/null)
+  log "  archives failing: $afail"
+  [ "$afail" -gt 0 ] && log "  (try zip-recover for Takeout archives over 4 GiB)"
+  return $bad
+}
+
+write_manifest() {
+  cat > "$DEST/MANIFEST.md" <<EOF
+# Offload $(date '+%Y-%m-%d')
+
+Created by \`offload $VERSION\` from \`$(scutil --get ComputerName 2>/dev/null || hostname)\`.
+
+## Contents
+
+$(du -sh "$DEST"/* 2>/dev/null | sort -rh | sed 's/^/    /')
+
+## Excluded on purpose
+
+Work source and services: $WORK_TERMS
+
+Credentials: ${CRED_PATTERNS[*]}
+
+Apple-synced, already in iCloud: ${APPLE_SYNCED[*]}
+
+Caches and rebuildable output: ${JUNK_PATTERNS[*]}
+
+## Audit
+
+See \`AUDIT.txt\`. It lists every file whose name or contents mention a work
+term, every archive over 1 MB, and any live credential found.
+
+Names are usually harmless. Contents are where a source snapshot hides, most
+often inside an archive or an AI agent transcript. Read the content list before
+you disconnect.
+
+## Restore notes
+
+- Shell config is under \`home-personal/\`.
+- Verify before trusting: \`unzip -tqq\` every archive, \`git fsck\` every repo.
+EOF
+  log "  wrote $DEST/MANIFEST.md"
+}
+
+# ---------------------------------------------------------------------------
+
+log "offload $VERSION -> $DEST"
+[ "$DRY_RUN" = 1 ] && log "(dry run, nothing will be written)"
+
+build_excludes
+
+if [ "$AUDIT_ONLY" = 1 ]; then
+  do_audit
+  exit $?
+fi
+
+do_copy
+
+step "Removing anything matching the work list from the copy"
+removed=0
+for t in $WORK_TERMS; do
+  while IFS= read -r f; do
+    [ "$DRY_RUN" = 1 ] || rm -rf "$f"
+    log "  removed: ${f#"$DEST"/}"
+    removed=$((removed + 1))
+  done < <(find "$DEST" -iname "*${t}*" 2>/dev/null)
+done
+[ "$removed" = 0 ] && log "  nothing to remove"
+
+if [ "$DRY_RUN" = 1 ]; then
+  step "Dry run complete. Re-run without --dry-run to copy."
+  exit 0
+fi
+
+write_manifest
+do_audit; audit_rc=$?
+[ "$SKIP_VERIFY" = 1 ] || do_verify
+
+step "Done"
+log "Destination: $DEST"
+log "Audit:       $AUDIT"
+[ "$audit_rc" != 0 ] && log "Audit found items to review. Read them before you disconnect."
+exit 0
