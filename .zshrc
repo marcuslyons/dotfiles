@@ -61,6 +61,7 @@ alias de="cd ~/Desktop"
 alias d="cd ~/Dev"
 alias ml="cd ~/github/marcuslyons"
 alias in="cd ~/github/insider"
+alias gr="cd ~/Library/Mobile\ Documents/iCloud~md~obsidian/Documents/grimoire"
 
 # Utility
 alias remove="rm -rf "
@@ -74,20 +75,28 @@ alias dcu='docker-compose up'
 alias dcb='docker-compose up --build'
 
 # Git
-alias ga="git add ."
+alias ga="git add"
+alias gaa="git add ."
+alias gap="git add --patch"
 alias gd="git diff"
+alias gds="git diff --staged"
 alias gf="git fetch"
 alias gp="git pull"
+alias gu="git push"
+alias gb="git branch"
 alias gpr="gh pr create"
-alias gs="clear && git status"
-alias gpush="git push"
-alias add="git add "
-alias commit="git commit -m "
-alias checkout="git checkout"
-alias gc="git checkout"
+alias gs="git status"
+alias gc="git commit"
 alias gcb="git checkout -b"
 alias gcm="git checkout main"
 alias gcma="git checkout master"
+alias gcl="git clone"
+
+alias gl="git log --all --graph --pretty=\
+	format: '%C(magenta)%h %C(white) %an %ar%C(auto) %D%n%s%n'"
+# workftrees
+alias gwl="git worktree list"
+alias gwr="git worktree remove "
 
 # remove all local branches except main
 alias gbr="git branch | grep -v "main" | xargs git branch -D"
@@ -134,11 +143,66 @@ mg() { mkdir "$@" && cd "$@" || exit; }
 cdl() { cd "$@" && ll; }
 npm-latest() { npm info "$1" | grep latest; }
 killport() { lsof -i tcp:"$*" | awk 'NR!=1 {print $2}' | xargs kill -9; }
+TEAM_NAME=engagement
 
+function unset_aws() {
+    unset AWS_PROFILE
+    unset AWS_SECRET_ACCESS_KEY
+    unset AWS_ACCESS_KEY_ID
+    unset AWS_SESSION_TOKEN
+}
+
+function promote_role() {
+    unset_aws
+    if [ -z ${1} ]; then
+        echo -e "ERROR: environment name needed"
+    else
+        if [[ "${1}" == "sbx" ]]; then
+            AWSACCNO=206229966755
+        elif [[ "${1}" == "dev" ]]; then
+            AWSACCNO=781249922241
+        elif [[ "${1}" == "prd" ]]; then
+            AWSACCNO=781406854653
+        else
+            echo "Unknown environment"
+            exit 1
+        fi
+        for i in $(aws sts assume-role --role-arn "arn:aws:iam::${AWSACCNO}:role/${1}-${TEAM_NAME}-privileged-role" --role-session-name "${1}" --duration-seconds 3600 | jq -r '.Credentials | "AWS_ACCESS_KEY_ID=\(.AccessKeyId)\nAWS_SECRET_ACCESS_KEY=\(.SecretAccessKey)\nAWS_SESSION_TOKEN=\(.SessionToken)\n"'); do
+            export "${i}"
+        done
+    fi
+}
 ## Volta and Starship
-export VOLTA_HOME="$HOME/.volta"
-export PATH="$VOLTA_HOME/bin:$PATH"
 
 eval "$(starship init zsh)"
 export PATH="/usr/local/sbin:$PATH"
 export PATH=/opt/homebrew/bin:/usr/local/sbin:/Users/marcuslyons/bin:/usr/local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+export VOLTA_HOME="$HOME/.volta"
+export PATH="$VOLTA_HOME/bin:$PATH"
+eval "$(pyenv init --path)"
+
+
+export PATH="/opt/homebrew/opt/mongodb-community@5.0/bin:$PATH"
+[[ $commands[kubectl] ]] && source <(kubectl completion zsh)
+
+source ~/.safe-chain/scripts/init-posix.sh # Safe-chain Zsh initialization script
+
+# Added by Antigravity
+export PATH="/Users/marcuslyons/.antigravity/antigravity/bin:$PATH"
+# pi update alias (uses volta, avoids npm global shadow)
+pi-update() {
+  echo "Updating pi-coding-agent..."
+  volta install @mariozechner/pi-coding-agent@latest
+  echo "Updating pi-boomerang..."
+  npm install -g pi-boomerang@latest
+  echo "Running pi package updates..."
+  pi update
+  echo "Done. pi $(pi --version)"
+}
+
+# Added for oh-my-pi
+export PATH="/Users/marcuslyons/.bun/bin:$PATH"
+. "$HOME/.cargo/env"
+
+export JIRA_USER_EMAIL="mlyons@insider.com"
+export JIRA_API_TOKEN="ATATT3xFfGF0dLMK0He-ZW6iv4VCuNYkdB7pNy4gXgoHGrMZyqHGdrU7XrCOiyyoTIidGhLjFj8GydJf-1HVs9kNgSDUKihvzz75-3iCGcs0JNwussUvt3Hgr0a752nfAsEr3ntprLwAN9IE_JVW_5R8ubZ95iAq4LEJNFcF6tPOdUs0h3fTBI8=6B1024CA"
