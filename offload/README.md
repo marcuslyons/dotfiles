@@ -18,10 +18,33 @@ Lands at `~/.local/bin/offload`, already on `PATH`.
 offload --dest /Volumes/nas/offload-$(date +%F) --dry-run   # look first
 offload --dest /Volumes/nas/offload-$(date +%F)             # copy, audit, verify
 offload --dest /Volumes/nas/offload-2026-09-10 --audit-only # re-audit later
+
+# bulk to the NAS, small irreplaceable set to iCloud as well
+offload --dest /Volumes/nas/offload-$(date +%F) --icloud \
+        --icloud-add va-claim-backup
 ```
 
 Set `--work-terms` to your employer's repo and service names before first use,
 or edit `WORK_TERMS_DEFAULT` in the script.
+
+## Two destinations
+
+A NAS you can only reach from home is not off-site, and one copy is not a
+backup. `--icloud` writes a second copy of the small irreplaceable set: SSH
+keys, plus anything named with `--icloud-add`.
+
+Keep that list short. iCloud is for what you could never reconstruct, not for
+bulk. It is also the right home for files over 100 MB, which GitHub rejects
+outright.
+
+**A file landing in the iCloud folder is not the same as it being uploaded.**
+The script waits for `brctl status` to report `caught-up` and prints your
+remaining quota. On a machine about to be wiped, that distinction is the whole
+point. It also re-runs the work-term audit against the iCloud copy, because a
+second destination is a second chance to leak.
+
+Private key permissions are re-applied after the copy, so `0600` does not
+become `0644` in transit.
 
 ## What it does
 
@@ -32,6 +55,7 @@ or edit `WORK_TERMS_DEFAULT` in the script.
 5. Scans for live credentials.
 6. Reads the copy back and compares both directions.
 7. Writes `MANIFEST.md` and `AUDIT.txt` into the destination.
+8. With `--icloud`, copies the small set off-site and waits for the upload.
 
 ## Why each guard exists
 

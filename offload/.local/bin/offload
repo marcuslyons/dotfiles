@@ -18,12 +18,21 @@
 #
 set -uo pipefail
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 DEST=""
 DRY_RUN=0
 AUDIT_ONLY=0
 SKIP_VERIFY=0
 INCLUDE_BULK=1
+ICLOUD=0
+ICLOUD_ROOT="$HOME/Library/Mobile Documents/com~apple~CloudDocs"
+
+# Small, irreplaceable, and worth a second copy off-site. Anything matching is
+# ALSO written to iCloud when --icloud is set. Keep this list short: iCloud is
+# for the things you would be unable to reconstruct, not for bulk.
+ICLOUD_PATHS=(
+  ".ssh/id_ed25519" ".ssh/id_ed25519.pub" ".ssh/config" ".ssh/known_hosts"
+)
 
 # ---------------------------------------------------------------------------
 # Exclusion list. Edit WORK_TERMS for your employer before first use.
@@ -62,6 +71,10 @@ Usage:
 
 Options:
   --dest <dir>       where to copy. Required.
+  --icloud           also copy the small irreplaceable set to iCloud Drive,
+                     and wait for the upload to finish before exiting
+  --icloud-add <p>   add a path to the iCloud set, relative to \$HOME.
+                     Repeatable.
   --work-terms "a b" employer repo and service names. Default:
                      "$WORK_TERMS_DEFAULT"
   --dry-run          show what would happen, copy nothing
@@ -69,6 +82,17 @@ Options:
   --no-bulk          config and dotfiles only, skip Downloads and Documents
   --skip-verify      do not read the copy back. Not recommended.
   -h, --help         this text
+
+About --icloud:
+  One copy is not a backup, and a NAS you can only reach from home is not
+  off-site. iCloud takes the small set: keys, and anything you add.
+
+  A file landing in the iCloud folder is NOT the same as it being uploaded.
+  This waits for the container to report caught-up, because the difference
+  matters when the machine is about to be wiped.
+
+  GitHub rejects any file over 100 MB, so large items belong here rather than
+  in a repo.
 
 What it does, in order:
   1. Refuses to run if --dest is inside \$HOME on the work machine.
@@ -94,6 +118,8 @@ WORK_TERMS="$WORK_TERMS_DEFAULT"
 while [ $# -gt 0 ]; do
   case "$1" in
     --dest) DEST="${2:-}"; shift 2 ;;
+    --icloud) ICLOUD=1; shift ;;
+    --icloud-add) ICLOUD_PATHS+=("${2:-}"); ICLOUD=1; shift 2 ;;
     --work-terms) WORK_TERMS="${2:-}"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --audit-only) AUDIT_ONLY=1; shift ;;
@@ -281,6 +307,72 @@ do_verify() {
   return $bad
 }
 
+# ---------------------------------------------------------------------------
+# iCloud: a second copy, off-site, for the small irreplaceable set.
+# ---------------------------------------------------------------------------
+
+do_icloud() {
+  step "Copying the irreplaceable set to iCloud"
+
+  if [ ! -d "$ICLOUD_ROOT" ]; then
+    warn "iCloud Drive is not set up at $ICLOUD_ROOT. Skipping."
+    return 1
+  fi
+
+  local target="$ICLOUD_ROOT/$(basename "$DEST")"
+  [ "$DRY_RUN" = 1 ] || mkdir -p "$target"
+  log "  target: $target"
+
+  local copied=0
+  for rel in "${ICLOUD_PATHS[@]}"; do
+    src="$HOME/$rel"
+    [ -e "$src" ] || { log "  skip (missing): $rel"; continue; }
+    sub=$(dirname "$rel"); [ "$sub" = "." ] && sub=""
+    # .ssh becomes ssh-keys, so the folder is obvious in a file browser later.
+    case "$sub" in .ssh) sub="ssh-keys" ;; esac
+    if [ "$DRY_RUN" = 1 ]; then
+      log "  would copy: $rel"
+    else
+      mkdir -p "$target/$sub"
+      cp -pR "$src" "$target/$sub/" 2>/dev/null && { log "  $rel"; copied=$((copied + 1)); }
+    fi
+  done
+
+  if [ "$DRY_RUN" = 1 ]; then return 0; fi
+
+  # A private key is 0600 on this disk. Copying must not relax that.
+  find "$target" -type f \( -name 'id_*' ! -name '*.pub' \) -exec chmod 600 {} \; 2>/dev/null
+
+  log "  copied $copied item(s)"
+
+  # Landing in the folder is not the same as being uploaded. On a machine
+  # about to be wiped, that distinction is the whole point.
+  if command -v brctl >/dev/null 2>&1; then
+    log "  waiting for upload"
+    local waited=0
+    while [ "$waited" -lt 600 ]; do
+      if brctl status com.apple.CloudDocs 2>/dev/null | grep -q 'caught-up'; then
+        log "  iCloud reports caught-up after ${waited}s"
+        break
+      fi
+      sleep 10; waited=$((waited + 10))
+    done
+    [ "$waited" -ge 600 ] && warn "iCloud still uploading after 10 minutes. Check before you disconnect."
+    brctl quota 2>/dev/null | sed 's/^/  /'
+  else
+    warn "brctl not found. Confirm the upload in Finder before you disconnect."
+  fi
+
+  # Never let work content reach a second destination either.
+  local pattern
+  pattern=$(echo "$WORK_TERMS" | tr ' ' '|')
+  local hits
+  hits=$(LC_ALL=C grep -rlEi "$pattern" "$target" 2>/dev/null | wc -l | tr -d ' ')
+  log "  work-term hits in the iCloud copy: $hits"
+  [ "$hits" != 0 ] && warn "Review $target before you disconnect."
+  return 0
+}
+
 write_manifest() {
   cat > "$DEST/MANIFEST.md" <<EOF
 # Offload $(date '+%Y-%m-%d')
@@ -344,6 +436,9 @@ done
 [ "$removed" = 0 ] && log "  nothing to remove"
 
 if [ "$DRY_RUN" = 1 ]; then
+  # Preview the iCloud step too. A dry run that hides half the work is a
+  # dry run you cannot trust.
+  [ "$ICLOUD" = 1 ] && do_icloud
   step "Dry run complete. Re-run without --dry-run to copy."
   exit 0
 fi
@@ -351,9 +446,11 @@ fi
 write_manifest
 do_audit; audit_rc=$?
 [ "$SKIP_VERIFY" = 1 ] || do_verify
+[ "$ICLOUD" = 1 ] && do_icloud
 
 step "Done"
 log "Destination: $DEST"
 log "Audit:       $AUDIT"
+[ "$ICLOUD" = 1 ] && log "iCloud:      $ICLOUD_ROOT/$(basename "$DEST")"
 [ "$audit_rc" != 0 ] && log "Audit found items to review. Read them before you disconnect."
 exit 0
