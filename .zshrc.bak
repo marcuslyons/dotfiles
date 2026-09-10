@@ -109,25 +109,6 @@ alias flush-npm="rm -rf node_modules && npm i && say NPM is done"
 alias nicache="npm install --prefer-offline"
 alias nioff="npm install --offline"
 
-# pnpm aliases
-alias pni="npm install"
-alias pnci="npm ci"
-alias pnrs="npm run start -s --"
-alias pnrb="npm run build -s --"
-alias pnrd="npm run dev -s --"
-alias pnrt="npm run test -s --"
-alias pnrtw="npm run test:watch -s --"
-alias pnrv="npm run validate -s --"
-
-## yarn aliases
-alias yar="yarn run"
-alias yas="yarn run start"
-alias yab="yarn run build"
-alias yat="yarn run test"
-alias yav="yarn run validate"
-alias yoff="yarn add --offline"
-alias ypm="echo \"Installing deps without lockfile and ignoring engines\" && yarn install --no-lockfile --ignore-engines"
-
 # functions
 gi() { curl -L -s https://www.gitignore.io/api/$@; }
 mg() { mkdir "$@" && cd "$@" || exit; }
